@@ -6,14 +6,73 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		29BB6CF62E428639002692F8 /* Helper in CopyFiles */ = {isa = PBXBuildFile; fileRef = 29E3556E2E425B3300668E2C /* Helper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		29E3558D2E425EAB00668E2C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29E355542E425AF300668E2C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 29E3556D2E425B3300668E2C;
+			remoteInfo = Helper;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		29BB6CF52E42862A002692F8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				29BB6CF62E428639002692F8 /* Helper in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		29E3557B2E425C0F00668E2C /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchDaemons;
+			dstSubfolderSpec = 1;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		29BB6CF42E4282DD002692F8 /* RouteMe.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RouteMe.entitlements; sourceTree = "<group>"; };
 		29E3555C2E425AF300668E2C /* RouteMe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RouteMe.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		29E3556E2E425B3300668E2C /* Helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Helper; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		29E3557D2E425C7200668E2C /* Exceptions for "Helper" folder in "Copy Files" phase from "RouteMe" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			attributesByRelativePath = {
+				kim.howon.RouteMe.Helper.plist = (CodeSignOnCopy, );
+			};
+			buildPhase = 29E3557B2E425C0F00668E2C /* CopyFiles */;
+			membershipExceptions = (
+				kim.howon.RouteMe.Helper.plist,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		29E3555E2E425AF300668E2C /* RouteMe */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = RouteMe;
+			sourceTree = "<group>";
+		};
+		29E3556F2E425B3300668E2C /* Helper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				29E3557D2E425C7200668E2C /* Exceptions for "Helper" folder in "Copy Files" phase from "RouteMe" target */,
+			);
+			path = Helper;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,13 +85,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		29E3556B2E425B3300668E2C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		29E355532E425AF300668E2C = {
 			isa = PBXGroup;
 			children = (
+				29BB6CF42E4282DD002692F8 /* RouteMe.entitlements */,
 				29E3555E2E425AF300668E2C /* RouteMe */,
+				29E3556F2E425B3300668E2C /* Helper */,
 				29E3555D2E425AF300668E2C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				29E3555C2E425AF300668E2C /* RouteMe.app */,
+				29E3556E2E425B3300668E2C /* Helper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,10 +124,13 @@
 				29E355582E425AF300668E2C /* Sources */,
 				29E355592E425AF300668E2C /* Frameworks */,
 				29E3555A2E425AF300668E2C /* Resources */,
+				29E3557B2E425C0F00668E2C /* CopyFiles */,
+				29BB6CF52E42862A002692F8 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				29E3558E2E425EAB00668E2C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				29E3555E2E425AF300668E2C /* RouteMe */,
@@ -69,6 +141,27 @@
 			productName = RouteMe;
 			productReference = 29E3555C2E425AF300668E2C /* RouteMe.app */;
 			productType = "com.apple.product-type.application";
+		};
+		29E3556D2E425B3300668E2C /* Helper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 29E355722E425B3300668E2C /* Build configuration list for PBXNativeTarget "Helper" */;
+			buildPhases = (
+				29E3556A2E425B3300668E2C /* Sources */,
+				29E3556B2E425B3300668E2C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				29E3556F2E425B3300668E2C /* Helper */,
+			);
+			name = Helper;
+			packageProductDependencies = (
+			);
+			productName = Helper;
+			productReference = 29E3556E2E425B3300668E2C /* Helper */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +174,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					29E3555B2E425AF300668E2C = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					29E3556D2E425B3300668E2C = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -100,6 +196,7 @@
 			projectRoot = "";
 			targets = (
 				29E3555B2E425AF300668E2C /* RouteMe */,
+				29E3556D2E425B3300668E2C /* Helper */,
 			);
 		};
 /* End PBXProject section */
@@ -122,7 +219,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		29E3556A2E425B3300668E2C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		29E3558E2E425EAB00668E2C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 29E3556D2E425B3300668E2C /* Helper */;
+			targetProxy = 29E3558D2E425EAB00668E2C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		29E355652E425AF400668E2C /* Debug */ = {
@@ -254,10 +366,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 48BUATF4VW;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -286,10 +397,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 48BUATF4VW;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -304,6 +414,42 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		29E355732E425B3300668E2C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEVELOPMENT_TEAM = 48BUATF4VW;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_OUTPUT_FORMAT = binary;
+				PRODUCT_BUNDLE_IDENTIFIER = kim.howon.RouteMe.Helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		29E355742E425B3300668E2C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEVELOPMENT_TEAM = 48BUATF4VW;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_OUTPUT_FORMAT = binary;
+				PRODUCT_BUNDLE_IDENTIFIER = kim.howon.RouteMe.Helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -326,6 +472,15 @@
 			buildConfigurations = (
 				29E355682E425AF400668E2C /* Debug */,
 				29E355692E425AF400668E2C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		29E355722E425B3300668E2C /* Build configuration list for PBXNativeTarget "Helper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				29E355732E425B3300668E2C /* Debug */,
+				29E355742E425B3300668E2C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
