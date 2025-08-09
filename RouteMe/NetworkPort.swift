@@ -13,9 +13,14 @@ struct NetworkPort: Identifiable, Hashable {
     let hardwarePort: String
     let device: String
     let ethernetAddress: String
+    let isActive: Bool
     
     var displayName: String {
         return "\(hardwarePort) (\(device))"
+    }
+    
+    var statusText: String {
+        return isActive ? "Active" : "Inactive"
     }
 }
 
@@ -42,7 +47,8 @@ class NetworkManager: ObservableObject {
                     ports.append(NetworkPort(
                         hardwarePort: hardwarePort,
                         device: device,
-                        ethernetAddress: ethernetAddress
+                        ethernetAddress: ethernetAddress,
+                        isActive: false // Will be updated later
                     ))
                 }
                 
@@ -64,7 +70,8 @@ class NetworkManager: ObservableObject {
             ports.append(NetworkPort(
                 hardwarePort: hardwarePort,
                 device: device,
-                ethernetAddress: ethernetAddress
+                ethernetAddress: ethernetAddress,
+                isActive: false // Will be updated later
             ))
         }
         
@@ -78,11 +85,110 @@ class NetworkManager: ObservableObject {
         
         await helperManager.runCommand("networksetup -listallhardwareports") { [weak self] output in
             guard let self = self else { return }
-            let ports = self.parseNetworkSetupOutput(output)
-            Task { @MainActor in
-                self.networkPorts = ports
-                self.isLoading = false
+            let allPorts = self.parseNetworkSetupOutput(output)
+            
+            Task {
+                let portsWithStatus = await self.addStatusToAllPorts(allPorts, using: helperManager)
+                await MainActor.run {
+                    self.networkPorts = portsWithStatus
+                    self.isLoading = false
+                }
             }
         }
+    }
+    
+    func getGatewayForInterface(_ interface: String, using helperManager: HelperToolManager) async -> String? {
+        return await withCheckedContinuation { continuation in
+            Task {
+                await helperManager.runCommand("route get -ifscope \(interface) 1.1.1.1 | grep gateway") { output in
+                    let gateway = self.parseGatewayOutput(output)
+                    continuation.resume(returning: gateway)
+                }
+            }
+        }
+    }
+    
+    private func parseGatewayOutput(_ output: String) -> String? {
+        let lines = output.components(separatedBy: .newlines)
+        
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmedLine.contains("gateway:") {
+                let components = trimmedLine.components(separatedBy: ":")
+                if components.count >= 2 {
+                    return components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    private func addStatusToAllPorts(_ ports: [NetworkPort], using helperManager: HelperToolManager) async -> [NetworkPort] {
+        var portsWithStatus: [NetworkPort] = []
+        
+        for port in ports {
+            let isActive = await checkInterfaceStatus(port.device, using: helperManager)
+            let updatedPort = NetworkPort(
+                hardwarePort: port.hardwarePort,
+                device: port.device,
+                ethernetAddress: port.ethernetAddress,
+                isActive: isActive
+            )
+            portsWithStatus.append(updatedPort)
+        }
+        
+        return portsWithStatus
+    }
+    
+    func getActiveNetworkPorts(using helperManager: HelperToolManager) async -> [NetworkPort] {
+        await MainActor.run {
+            isLoading = true
+        }
+        
+        return await withCheckedContinuation { continuation in
+            Task {
+                await helperManager.runCommand("networksetup -listallhardwareports") { [weak self] output in
+                    guard let self = self else { 
+                        continuation.resume(returning: [])
+                        return 
+                    }
+                    let allPorts = self.parseNetworkSetupOutput(output)
+                    
+                    Task {
+                        let portsWithStatus = await self.addStatusToAllPorts(allPorts, using: helperManager)
+                        let activePorts = portsWithStatus.filter { $0.isActive }
+                        await MainActor.run {
+                            self.isLoading = false
+                        }
+                        continuation.resume(returning: activePorts)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func checkInterfaceStatus(_ interface: String, using helperManager: HelperToolManager) async -> Bool {
+        return await withCheckedContinuation { continuation in
+            Task {
+                await helperManager.runCommand("ifconfig \(interface) | grep status") { output in
+                    let isActive = self.parseInterfaceStatus(output)
+                    continuation.resume(returning: isActive)
+                }
+            }
+        }
+    }
+    
+    private func parseInterfaceStatus(_ output: String) -> Bool {
+        let lines = output.components(separatedBy: .newlines)
+        
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmedLine.contains("status:") {
+                let isActive = !trimmedLine.contains("inactive")
+                return isActive
+            }
+        }
+        return true
     }
 }
