@@ -43,7 +43,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		29BB6CF42E4282DD002692F8 /* RouteMe.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RouteMe.entitlements; sourceTree = "<group>"; };
 		29E3555C2E425AF300668E2C /* RouteMe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RouteMe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		29E3556E2E425B3300668E2C /* Helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Helper; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -98,7 +97,6 @@
 		29E355532E425AF300668E2C = {
 			isa = PBXGroup;
 			children = (
-				29BB6CF42E4282DD002692F8 /* RouteMe.entitlements */,
 				29E3555E2E425AF300668E2C /* RouteMe */,
 				29E3556F2E425B3300668E2C /* Helper */,
 				29E3555D2E425AF300668E2C /* Products */,
