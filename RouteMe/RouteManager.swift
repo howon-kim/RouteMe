@@ -32,11 +32,53 @@ class RouteManager {
         let networkWithCIDR = "\(ipAddress)/\(cidr)"
         let command = "sudo route -n add -net \(networkWithCIDR) -interface \(interface)"
         
+        // Debug output
+        print("🚀 [RouteManager] Executing ADD command: \(command)")
+        
         return await withCheckedContinuation { continuation in
             Task {
                 await helperManager.runCommand(command) { output in
                     let success = !output.contains("File exists") && !output.lowercased().contains("error")
                     let message = output.isEmpty ? "Route added successfully" : output
+                    
+                    // Debug output
+                    print("✅ [RouteManager] ADD command result - Success: \(success), Output: '\(output)'")
+                    
+                    continuation.resume(returning: (success: success, message: message))
+                }
+            }
+        }
+    }
+    
+    /// Adds a network route using gateway instead of interface
+    /// - Parameters:
+    ///   - ipAddress: The destination network IP address (e.g., "10.76.135.0")
+    ///   - subnetMask: The subnet mask (e.g., "255.255.255.0")
+    ///   - gateway: The gateway IP address (e.g., "10.0.0.1")
+    ///   - helperManager: The helper tool manager for privileged operations
+    /// - Returns: Success status and output message
+    func addRouteUsingGateway(
+        ipAddress: String,
+        subnetMask: String,
+        gateway: String,
+        using helperManager: HelperToolManager
+    ) async -> (success: Bool, message: String) {
+        
+        let cidr = subnetMaskToCIDR(subnetMask)
+        let command = "sudo route -n add -net \(ipAddress)/\(cidr) \(gateway)"
+        
+        // Debug output
+        print("🚀 [RouteManager] Executing ADD command: \(command)")
+        
+        return await withCheckedContinuation { continuation in
+            Task {
+                await helperManager.runCommand(command) { output in
+                    let success = !output.contains("File exists") && !output.lowercased().contains("error")
+                    let message = output.isEmpty ? "Route added successfully" : output
+                    
+                    // Debug output
+                    print("✅ [RouteManager] ADD command result - Success: \(success), Output: '\(output)'")
+                    
                     continuation.resume(returning: (success: success, message: message))
                 }
             }
@@ -61,11 +103,53 @@ class RouteManager {
         let networkWithCIDR = "\(ipAddress)/\(cidr)"
         let command = "sudo route -n delete -net \(networkWithCIDR) -interface \(interface)"
         
+        // Debug output
+        print("🔥 [RouteManager] Executing REMOVE command: \(command)")
+        
         return await withCheckedContinuation { continuation in
             Task {
                 await helperManager.runCommand(command) { output in
                     let success = !output.lowercased().contains("error") && !output.contains("not in table")
                     let message = output.isEmpty ? "Route removed successfully" : output
+                    
+                    // Debug output
+                    print("❌ [RouteManager] REMOVE command result - Success: \(success), Output: '\(output)'")
+                    
+                    continuation.resume(returning: (success: success, message: message))
+                }
+            }
+        }
+    }
+    
+    /// Removes a network route using gateway instead of interface
+    /// - Parameters:
+    ///   - ipAddress: The destination network IP address (e.g., "10.76.135.0")
+    ///   - subnetMask: The subnet mask (e.g., "255.255.255.0")
+    ///   - gateway: The gateway IP address (e.g., "10.0.0.1")
+    ///   - helperManager: The helper tool manager for privileged operations
+    /// - Returns: Success status and output message
+    func removeRouteUsingGateway(
+        ipAddress: String,
+        subnetMask: String,
+        gateway: String,
+        using helperManager: HelperToolManager
+    ) async -> (success: Bool, message: String) {
+        
+        let cidr = subnetMaskToCIDR(subnetMask)
+        let command = "sudo route -n delete -net \(ipAddress)/\(cidr) \(gateway)"
+        
+        // Debug output
+        print("🔥 [RouteManager] Executing REMOVE command: \(command)")
+        
+        return await withCheckedContinuation { continuation in
+            Task {
+                await helperManager.runCommand(command) { output in
+                    let success = !output.lowercased().contains("error") && !output.contains("not in table")
+                    let message = output.isEmpty ? "Route removed successfully" : output
+                    
+                    // Debug output
+                    print("❌ [RouteManager] REMOVE command result - Success: \(success), Output: '\(output)'")
+                    
                     continuation.resume(returning: (success: success, message: message))
                 }
             }
@@ -84,10 +168,10 @@ class RouteManager {
         using helperManager: HelperToolManager
     ) async -> (success: Bool, message: String) {
         
-        return await addRouteUsingInterface(
+        return await addRouteUsingGateway(
             ipAddress: route.ipAddress,
             subnetMask: route.subnetMask,
-            interface: route.interface,
+            gateway: route.gateway,
             using: helperManager
         )
     }
@@ -102,10 +186,10 @@ class RouteManager {
         using helperManager: HelperToolManager
     ) async -> (success: Bool, message: String) {
         
-        return await removeRouteUsingInterface(
+        return await removeRouteUsingGateway(
             ipAddress: route.ipAddress,
             subnetMask: route.subnetMask,
-            interface: route.interface,
+            gateway: route.gateway,
             using: helperManager
         )
     }
@@ -122,10 +206,15 @@ class RouteManager {
         
         var results: [(route: Route, success: Bool, message: String)] = []
         
-        for route in routes where route.isEnabled {
+        print("🎯 [RouteManager] Applying \(routes.count) routes to system")
+        
+        for route in routes {
             let result = await addRoute(route, using: helperManager)
             results.append((route: route, success: result.success, message: result.message))
         }
+        
+        let successCount = results.filter(\.success).count
+        print("📊 [RouteManager] Batch apply completed - \(successCount)/\(results.count) routes applied successfully")
         
         return results
     }
@@ -142,10 +231,15 @@ class RouteManager {
         
         var results: [(route: Route, success: Bool, message: String)] = []
         
+        print("🧹 [RouteManager] Removing \(routes.count) routes from system")
+        
         for route in routes {
             let result = await removeRoute(route, using: helperManager)
             results.append((route: route, success: result.success, message: result.message))
         }
+        
+        let successCount = results.filter(\.success).count
+        print("📊 [RouteManager] Batch removal completed - \(successCount)/\(results.count) routes removed successfully")
         
         return results
     }
@@ -200,6 +294,53 @@ class RouteManager {
                 }
             }
         }
+    }
+    
+    /// Checks if a route is active in the system by verifying the gateway
+    /// - Parameters:
+    ///   - route: The Route to check
+    ///   - helperManager: The helper tool manager
+    /// - Returns: True if the route is active with the correct gateway
+    func isRouteActive(_ route: Route, using helperManager: HelperToolManager) async -> Bool {
+        let command = "route -n get \(route.ipAddress)"
+        
+        return await withCheckedContinuation { continuation in
+            Task {
+                await helperManager.runCommand(command) { output in
+                    // Check if the output contains our expected gateway
+                    let isActive = output.contains("gateway: \(route.gateway)")
+                    
+                    // Debug output
+                    print("🔍 [RouteManager] Route status check for \(route.ipAddress):")
+                    print("   Expected gateway: \(route.gateway)")
+                    print("   Command output: \(output.prefix(200))")
+                    print("   Status: \(isActive ? "ACTIVE" : "INACTIVE")")
+                    
+                    continuation.resume(returning: isActive)
+                }
+            }
+        }
+    }
+    
+    /// Checks the status of multiple routes
+    /// - Parameters:
+    ///   - routes: Array of routes to check
+    ///   - helperManager: The helper tool manager
+    /// - Returns: Dictionary mapping route IDs to their active status
+    func checkRoutesStatus(_ routes: [Route], using helperManager: HelperToolManager) async -> [UUID: Bool] {
+        var statusMap: [UUID: Bool] = [:]
+        
+        print("🔍 [RouteManager] Checking status of \(routes.count) routes")
+        
+        for route in routes {
+            let isActive = await isRouteActive(route, using: helperManager)
+            statusMap[route.id] = isActive
+        }
+        
+        let activeCount = statusMap.values.filter { $0 }.count
+        print("📊 [RouteManager] Status check completed - \(activeCount)/\(routes.count) routes are active")
+        
+        return statusMap
     }
 }
 

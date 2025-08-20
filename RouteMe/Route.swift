@@ -17,7 +17,7 @@ final class Route {
     var subnetMask: String
     var gateway: String
     var interface: String
-    var isEnabled: Bool
+    var isActive: Bool = false // Tracks actual system status
     var createdAt: Date
     var updatedAt: Date
     
@@ -26,8 +26,7 @@ final class Route {
         ipAddress: String,
         subnetMask: String,
         gateway: String,
-        interface: String,
-        isEnabled: Bool = true
+        interface: String
     ) {
         self.id = UUID()
         self.name = name
@@ -35,7 +34,7 @@ final class Route {
         self.subnetMask = subnetMask
         self.gateway = gateway
         self.interface = interface
-        self.isEnabled = isEnabled
+        self.isActive = false // Initially not active in system
         self.createdAt = Date()
         self.updatedAt = Date()
     }
@@ -46,14 +45,14 @@ final class Route {
         subnetMask: String? = nil,
         gateway: String? = nil,
         interface: String? = nil,
-        isEnabled: Bool? = nil
+        isActive: Bool? = nil
     ) {
         if let name = name { self.name = name }
         if let ipAddress = ipAddress { self.ipAddress = ipAddress }
         if let subnetMask = subnetMask { self.subnetMask = subnetMask }
         if let gateway = gateway { self.gateway = gateway }
         if let interface = interface { self.interface = interface }
-        if let isEnabled = isEnabled { self.isEnabled = isEnabled }
+        if let isActive = isActive { self.isActive = isActive }
         self.updatedAt = Date()
     }
     
@@ -78,10 +77,6 @@ final class Route {
     /// - Parameter helperManager: Helper tool manager for privileged operations
     /// - Returns: Success status and message
     func applyToSystem(using helperManager: HelperToolManager) async -> (success: Bool, message: String) {
-        guard isEnabled else {
-            return (success: false, message: "Route is disabled")
-        }
-        
         return await RouteManager.shared.addRoute(self, using: helperManager)
     }
     
@@ -90,6 +85,21 @@ final class Route {
     /// - Returns: Success status and message
     func removeFromSystem(using helperManager: HelperToolManager) async -> (success: Bool, message: String) {
         return await RouteManager.shared.removeRoute(self, using: helperManager)
+    }
+    
+    /// Checks if this route is actually active in the system
+    /// - Parameter helperManager: Helper tool manager for privileged operations
+    /// - Returns: True if route is active in system with correct gateway
+    func checkSystemStatus(using helperManager: HelperToolManager) async -> Bool {
+        return await RouteManager.shared.isRouteActive(self, using: helperManager)
+    }
+    
+    /// Updates the route's active status based on system check
+    /// - Parameter helperManager: Helper tool manager for privileged operations
+    func refreshSystemStatus(using helperManager: HelperToolManager) async {
+        let actualStatus = await checkSystemStatus(using: helperManager)
+        isActive = actualStatus
+        updatedAt = Date()
     }
 }
 
