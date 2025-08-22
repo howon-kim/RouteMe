@@ -10,7 +10,7 @@ import AppKit
 import SwiftData
 import Combine
 
-class MenuBarManager: NSObject, ObservableObject {
+class MenuBarManager: NSObject, ObservableObject, NSMenuDelegate {
     static let shared = MenuBarManager()
     
     private var statusItem: NSStatusItem?
@@ -152,19 +152,6 @@ class MenuBarManager: NSObject, ObservableObject {
         
         menu.addItem(NSMenuItem.separator())
         
-        // Add refresh items
-        let refreshMenuItem = NSMenuItem()
-        refreshMenuItem.title = "🔄 Refresh Menu"
-        refreshMenuItem.target = self
-        refreshMenuItem.action = #selector(refreshRoutes)
-        menu.addItem(refreshMenuItem)
-        
-        let checkAllStatusItem = NSMenuItem()
-        checkAllStatusItem.title = "🔍 Check All Status"
-        checkAllStatusItem.target = self
-        checkAllStatusItem.action = #selector(checkAllRoutesStatus)
-        menu.addItem(checkAllStatusItem)
-        
         // Add route management items
         let addRouteItem = NSMenuItem()
         addRouteItem.title = "➕ Add New Route"
@@ -188,6 +175,7 @@ class MenuBarManager: NSObject, ObservableObject {
         quitItem.action = #selector(quitApp)
         menu.addItem(quitItem)
         
+        menu.delegate = self
         statusItem?.menu = menu
     }
     
@@ -300,10 +288,6 @@ class MenuBarManager: NSObject, ObservableObject {
         NSUserNotificationCenter.default.deliver(notification)
     }
     
-    @objc private func refreshRoutes() {
-        loadRoutes()
-    }
-    
     @objc private func checkRouteSystemStatus(_ sender: NSMenuItem) {
         guard let routeId = sender.representedObject as? UUID,
               let route = routes.first(where: { $0.id == routeId }),
@@ -333,43 +317,6 @@ class MenuBarManager: NSObject, ObservableObject {
                 }
             } catch {
                 print("Failed to save route status: \(error)")
-            }
-        }
-    }
-    
-    @objc private func checkAllRoutesStatus() {
-        guard let modelContainer = modelContainer else { return }
-        
-        Task {
-            let context = modelContainer.mainContext
-            let statusMap = await RouteManager.shared.checkRoutesStatus(routes, using: helperToolManager)
-            
-            await MainActor.run {
-                for route in routes {
-                    if let isActive = statusMap[route.id] {
-                        route.isActive = isActive
-                        route.updatedAt = Date()
-                    }
-                }
-            }
-            
-            let activeCount = statusMap.values.filter { $0 }.count
-            let totalCount = routes.count
-            
-            await MainActor.run {
-                showNotification(
-                    title: "Status Check Complete",
-                    message: "\(activeCount) of \(totalCount) routes are active in system"
-                )
-            }
-            
-            do {
-                try context.save()
-                await MainActor.run {
-                    loadRoutes() // Refresh the menu
-                }
-            } catch {
-                print("Failed to save route statuses: \(error)")
             }
         }
     }
@@ -407,6 +354,40 @@ class MenuBarManager: NSObject, ObservableObject {
     
     @objc private func quitApp() {
         NSApp.terminate(nil)
+    }
+    
+    // MARK: - NSMenuDelegate
+    
+    func menuWillOpen(_ menu: NSMenu) {
+        // Automatically refresh route statuses when menu opens
+        Task {
+            await checkAllRoutesStatusSilently()
+        }
+    }
+    
+    private func checkAllRoutesStatusSilently() async {
+        guard let modelContainer = modelContainer else { return }
+        
+        let context = modelContainer.mainContext
+        let statusMap = await RouteManager.shared.checkRoutesStatus(routes, using: helperToolManager)
+        
+        await MainActor.run {
+            for route in routes {
+                if let isActive = statusMap[route.id] {
+                    route.isActive = isActive
+                    route.updatedAt = Date()
+                }
+            }
+        }
+        
+        do {
+            try context.save()
+            await MainActor.run {
+                loadRoutes() // Refresh the menu with updated statuses
+            }
+        } catch {
+            print("Failed to save route statuses: \(error)")
+        }
     }
     
     func updateRouteCount(_ count: Int) {
