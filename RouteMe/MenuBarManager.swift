@@ -32,7 +32,16 @@ class MenuBarManager: NSObject, ObservableObject, NSMenuDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let statusButton = statusItem?.button {
-            statusButton.image = NSImage(systemSymbolName: "point.3.connected.trianglepath.dotted", accessibilityDescription: "RouteMe")
+            // Try to load custom MenuIcon.png first, fallback to system icon
+            if let customIcon = NSImage(named: "MenuIcon") {
+                // Configure the custom icon for menu bar usage
+                customIcon.isTemplate = true  // This makes it adapt to light/dark mode
+                customIcon.size = NSSize(width: 18, height: 18)  // Standard menu bar icon size
+                statusButton.image = customIcon
+            } else {
+                // Fallback to system icon if MenuIcon.png is not found
+                statusButton.image = NSImage(systemSymbolName: "point.3.connected.trianglepath.dotted", accessibilityDescription: "RouteMe")
+            }
         }
         
         updateMenu()

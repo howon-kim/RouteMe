@@ -16,9 +16,14 @@ struct RoutesView: View {
     @State private var operationMessage: String = ""
     @State private var showingOperationAlert = false
     @StateObject private var helperToolManager = HelperToolManager()
+    @State private var showingHelperInstallPrompt = false
     
     var activeRoutesCount: Int {
         routes.filter(\.isActive).count
+    }
+    
+    var needsHelperTool: Bool {
+        helperToolManager.status != "Registered"
     }
     
     var routesByInterface: [String: [Route]] {
@@ -270,6 +275,18 @@ struct RoutesView: View {
         } message: {
             Text(operationMessage)
         }
+        .alert("Helper Tool Required", isPresented: $showingHelperInstallPrompt) {
+            Button("Install Helper Tool") {
+                Task {
+                    await helperToolManager.manageHelperTool(action: .install)
+                }
+            }
+            .keyboardShortcut(.defaultAction)
+            
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("RouteMe needs to install a helper tool to manage network routes. This requires administrator privileges and only needs to be done once.")
+        }
     }
     
     private func deleteRoute(_ route: Route) {
@@ -306,6 +323,14 @@ struct RoutesView: View {
     // MARK: - Route System Operations
     
     private func applyRouteToSystem(_ route: Route) async {
+        // Check if helper tool is installed
+        guard !needsHelperTool else {
+            await MainActor.run {
+                showingHelperInstallPrompt = true
+            }
+            return
+        }
+        
         let result = await route.applyToSystem(using: helperToolManager)
         await MainActor.run {
             operationMessage = result.success ? 
@@ -322,6 +347,14 @@ struct RoutesView: View {
     }
     
     private func removeRouteFromSystem(_ route: Route) async {
+        // Check if helper tool is installed
+        guard !needsHelperTool else {
+            await MainActor.run {
+                showingHelperInstallPrompt = true
+            }
+            return
+        }
+        
         let result = await route.removeFromSystem(using: helperToolManager)
         await MainActor.run {
             operationMessage = result.success ? 
@@ -338,6 +371,14 @@ struct RoutesView: View {
     }
     
     private func applyAllRoutesToSystem() async {
+        // Check if helper tool is installed
+        guard !needsHelperTool else {
+            await MainActor.run {
+                showingHelperInstallPrompt = true
+            }
+            return
+        }
+        
         let results = await RouteManager.shared.applyRoutes(routes, using: helperToolManager)
         
         let successCount = results.filter(\.success).count
@@ -360,6 +401,14 @@ struct RoutesView: View {
     }
     
     private func removeAllRoutesFromSystem() async {
+        // Check if helper tool is installed
+        guard !needsHelperTool else {
+            await MainActor.run {
+                showingHelperInstallPrompt = true
+            }
+            return
+        }
+        
         let results = await RouteManager.shared.removeRoutes(routes, using: helperToolManager)
         
         let successCount = results.filter(\.success).count
@@ -645,6 +694,25 @@ struct AddEditRouteView: View {
         !interface.isEmpty
     }
     
+    var formValidationMessage: String? {
+        if name.isEmpty {
+            return "Route name is required"
+        }
+        if !Route.isValidIPAddress(ipAddress) {
+            return "Please enter a valid IP address"
+        }
+        if !Route.isValidIPAddress(subnetMask) {
+            return "Please enter a valid subnet mask"
+        }
+        if !Route.isValidIPAddress(gateway) {
+            return "Please enter a valid gateway address"
+        }
+        if interface.isEmpty {
+            return "Please select a network interface"
+        }
+        return nil
+    }
+    
     // Auto-detect subnet mask based on IP address
     private func detectSubnetMask(from ipAddress: String) -> String {
         let components = ipAddress.split(separator: ".").compactMap { Int($0) }
@@ -822,32 +890,11 @@ struct AddEditRouteView: View {
                             }
                             
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Gateway")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(.primary)
-                                HStack {
-                                    TextField("192.168.1.1", text: $gateway)
-                                        .textFieldStyle(.roundedBorder)
-                                        .font(.system(.body, design: .monospaced))
-                                        .disabled(isDetectingGateway)
-                                    
-                                    if isDetectingGateway {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
-                                        Text("Auto-detecting...")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 6) {
                                 Text("Network Interface")
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                                     .foregroundStyle(.primary)
-                                HStack {
+                                VStack(alignment: .leading, spacing: 8) {
                                     Picker("Select Interface", selection: $interface) {
                                         Text("Choose network interface").tag("")
                                         ForEach(activeNetworkPorts, id: \.device) { port in
@@ -856,6 +903,7 @@ struct AddEditRouteView: View {
                                     }
                                     .pickerStyle(.menu)
                                     .disabled(activeNetworkPorts.isEmpty)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                     .onChange(of: interface) { oldValue, newValue in
                                         if !newValue.isEmpty && newValue != oldValue {
                                             Task {
@@ -884,11 +932,35 @@ struct AddEditRouteView: View {
                                             activeNetworkPorts = await networkManager.getActiveNetworkPorts(using: helperToolManager)
                                         }
                                     }) {
-                                        Image(systemName: "arrow.clockwise")
-                                            .foregroundStyle(.blue)
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "arrow.clockwise")
+                                            Text("Refresh Interfaces")
+                                        }
+                                        .font(.caption)
+                                        .foregroundStyle(.blue)
                                     }
                                     .buttonStyle(.borderless)
-                                    .help("Refresh network interfaces")
+                                }
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Gateway")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.primary)
+                                HStack {
+                                    TextField("192.168.1.1", text: $gateway)
+                                        .textFieldStyle(.roundedBorder)
+                                        .font(.system(.body, design: .monospaced))
+                                        .disabled(isDetectingGateway)
+                                    
+                                    if isDetectingGateway {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                        Text("Auto-detecting...")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
                         }
@@ -897,28 +969,24 @@ struct AddEditRouteView: View {
                     .padding(.vertical, 20)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                     
-                    // Validation Warning
-                    if !isFormValid {
+                    // Validation Warning - only show when needed
+                    if let validationMessage = formValidationMessage {
                         HStack(spacing: 12) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Form Validation")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                Text("Please ensure all fields are filled with valid IP addresses")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                            Text(validationMessage)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.primary)
                             
                             Spacer()
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 16)
-                        .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 8)
                                 .stroke(.orange.opacity(0.3), lineWidth: 1)
                         )
                     }

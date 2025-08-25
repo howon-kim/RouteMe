@@ -118,26 +118,7 @@ struct ContentView: View {
                     InterfaceRoutesView(interface: interfaceName, routes: routesByInterface[interfaceName] ?? [])
                 }
             }
-            .navigationTitle("Helper tool is \(helperToolManager.status.lowercased())")
-            .toolbar {
-                ToolbarItemGroup(placement: .automatic) {
-                    Button("Register") {
-                        Task {
-                            await helperToolManager.manageHelperTool(action: .install)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-
-                    Button("Unregister") {
-                        Task {
-                            await helperToolManager.manageHelperTool(action: .uninstall)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-                }
-            }
+            .navigationTitle("RouteMe")
             .toolbarBackground(.clear)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -227,10 +208,15 @@ struct InterfaceRoutesView: View {
     @State private var selectedRoute: Route?
     @State private var operationMessage: String = ""
     @State private var showingOperationAlert = false
+    @State private var showingHelperInstallPrompt = false
     @StateObject private var helperToolManager = HelperToolManager()
     
     var activeRoutesCount: Int {
         routes.filter(\.isActive).count
+    }
+    
+    var needsHelperTool: Bool {
+        helperToolManager.status != "Registered"
     }
     
     var body: some View {
@@ -400,6 +386,18 @@ struct InterfaceRoutesView: View {
         } message: {
             Text(operationMessage)
         }
+        .alert("Helper Tool Required", isPresented: $showingHelperInstallPrompt) {
+            Button("Install Helper Tool") {
+                Task {
+                    await helperToolManager.manageHelperTool(action: .install)
+                }
+            }
+            .keyboardShortcut(.defaultAction)
+            
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("RouteMe needs to install a helper tool to manage network routes. This requires administrator privileges and only needs to be done once.")
+        }
     }
     
     // MARK: - Route Operations
@@ -429,6 +427,14 @@ struct InterfaceRoutesView: View {
     }
     
     private func applyRouteToSystem(_ route: Route) async {
+        // Check if helper tool is installed
+        guard !needsHelperTool else {
+            await MainActor.run {
+                showingHelperInstallPrompt = true
+            }
+            return
+        }
+        
         let result = await route.applyToSystem(using: helperToolManager)
         await MainActor.run {
             operationMessage = result.success ? 
@@ -442,6 +448,14 @@ struct InterfaceRoutesView: View {
     }
     
     private func removeRouteFromSystem(_ route: Route) async {
+        // Check if helper tool is installed
+        guard !needsHelperTool else {
+            await MainActor.run {
+                showingHelperInstallPrompt = true
+            }
+            return
+        }
+        
         let result = await route.removeFromSystem(using: helperToolManager)
         await MainActor.run {
             operationMessage = result.success ? 
