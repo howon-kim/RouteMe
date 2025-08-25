@@ -1,0 +1,169 @@
+{
+  "fill-specializations" : [
+    {
+      "value" : "automatic"
+    },
+    {
+      "appearance" : "dark",
+      "value" : "automatic"
+    }
+  ],
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "image-name" : "FONT 2.png",
+          "name" : "FONT 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              11.65272163236171,
+              -253.89487710511185
+            ]
+          }
+        },
+        {
+          "image-name" : "ROUTE.png",
+          "name" : "ROUTE",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              10.980449230494687,
+              -102.58378872933812
+            ]
+          }
+        },
+        {
+          "image-name" : "24.png",
+          "name" : "24",
+          "position" : {
+            "scale" : 0.6,
+            "translation-in-points" : [
+              0.9088126914128254,
+              102.08580917239958
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "blend-mode-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "normal"
+            }
+          ],
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "automatic"
+            }
+          ],
+          "glass" : true,
+          "image-name" : "RED.png",
+          "name" : "RED",
+          "opacity-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : 1
+            }
+          ],
+          "position" : {
+            "scale" : 0.3,
+            "translation-in-points" : [
+              2.172435817144356,
+              -223.91650777741208
+            ]
+          }
+        },
+        {
+          "image-name" : "BLUE.png",
+          "name" : "BLUE",
+          "position" : {
+            "scale" : 0.3,
+            "translation-in-points" : [
+              3.3924857316437667,
+              105.39114848157911
+            ]
+          }
+        }
+      ],
+      "position" : {
+        "scale" : 1,
+        "translation-in-points" : [
+          -1.469039692968677,
+          -1.1204540031117027
+        ]
+      },
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "hidden" : false,
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "automatic"
+            }
+          ],
+          "glass" : true,
+          "image-name" : "WHITE.png",
+          "name" : "WHITE",
+          "position" : {
+            "scale" : 0.3,
+            "translation-in-points" : [
+              -11.820789732828477,
+              137.31786282580092
+            ]
+          }
+        }
+      ],
+      "position" : {
+        "scale" : 1,
+        "translation-in-points" : [
+          13.746358367673908,
+          -132.97701931210565
+        ]
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : false,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

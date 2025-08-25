@@ -89,30 +89,20 @@ fastlane/test_output
 
 iOSInjectionProject/
 
-# MAC
-# General
+# macOS-specific files that cause code signing issues
 .DS_Store
-.AppleDouble
-.LSOverride
-
-# Icon must end with two \r
-Icon
-
-# Thumbnails
 ._*
+*.swp
+*~.nib
 
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
+# Temporary files
+*.tmp
+*.temp
 
-# Directories potentially created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
+# IDE files
+.vscode/
+.idea/
+
+# Distribution and packaging scripts (contain sensitive info)
+package_app.sh
+setup_notarization.sh
