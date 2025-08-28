@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftData
-import CloudKit
 
 @Model
 final class Route {
