@@ -133,70 +133,255 @@ struct NetworkPortsView: View {
     @ObservedObject var networkManager: NetworkManager
     @ObservedObject var helperToolManager: HelperToolManager
     
+    var activePortsCount: Int {
+        networkManager.networkPorts.filter(\.isActive).count
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Network Hardware Ports")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Button(action: {
-                    Task {
-                        await networkManager.refreshNetworkPorts(using: helperToolManager)
-                    }
-                }) {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                        .padding(4)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(networkManager.isLoading)
-            }
-            
-            if networkManager.isLoading {
-                HStack {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                    Text("Loading network ports...")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            } else if networkManager.networkPorts.isEmpty {
-                Text("No network ports found. Click Refresh to load network information.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding()
-            } else {
-                Table(networkManager.networkPorts) {
-                    TableColumn("Hardware Port") { port in
-                        Text(port.hardwarePort)
-                    }
-                    TableColumn("Device") { port in
-                        Text(port.device)
-                            .font(.system(.body, design: .monospaced))
-                    }
-                    TableColumn("Ethernet Address") { port in
-                        Text(port.ethernetAddress)
-                            .font(.system(.body, design: .monospaced))
-                    }
-                    
-                    TableColumn("Status") { port in
-                        HStack {
-                            Circle()
-                                .fill(port.isActive ? .green : .red)
-                                .frame(width: 8, height: 8)
-                            Text(port.statusText)
-                                .font(.caption)
-                                .foregroundStyle(port.isActive ? .green : .red)
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Header Section
+                VStack(spacing: 16) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Network Ports")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.primary)
+                            
+                            HStack(spacing: 12) {
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .fill(.green)
+                                        .frame(width: 8, height: 8)
+                                    Text("\(activePortsCount) Active")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .fill(.gray)
+                                        .frame(width: 8, height: 8)
+                                    Text("\(networkManager.networkPorts.count - activePortsCount) Inactive")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                Text("•")
+                                    .foregroundStyle(.secondary)
+                                
+                                Text("\(networkManager.networkPorts.count) Total Ports")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        // Action Buttons
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                Task {
+                                    await networkManager.refreshNetworkPorts(using: helperToolManager)
+                                }
+                            }) {
+                                Label(networkManager.isLoading ? "Refreshing..." : "Refresh Ports", systemImage: "arrow.clockwise")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                            .disabled(networkManager.isLoading)
                         }
                     }
                 }
-                .frame(maxHeight: .infinity)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
+                .background(.regularMaterial, in: Rectangle())
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(.separator)
+                        .frame(height: 0.5)
+                }
+                
+                // Main Content
+                if networkManager.isLoading {
+                    VStack(spacing: 0) {
+                        Spacer()
+                        
+                        VStack(spacing: 24) {
+                            // Icon with loading animation
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.blue.opacity(0.1), .purple.opacity(0.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 120, height: 120)
+                                
+                                ProgressView()
+                                    .scaleEffect(1.5)
+                                    .foregroundStyle(.blue)
+                            }
+                            
+                            VStack(spacing: 12) {
+                                Text("Loading Network Ports")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.primary)
+                                
+                                Text("Scanning system network hardware...")
+                                    .font(.body)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                } else if networkManager.networkPorts.isEmpty {
+                    // Enhanced Empty State
+                    VStack(spacing: 0) {
+                        Spacer()
+                        
+                        VStack(spacing: 24) {
+                            // Icon with gradient background
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.blue.opacity(0.1), .purple.opacity(0.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 120, height: 120)
+                                
+                                Image(systemName: "network")
+                                    .font(.system(size: 48, weight: .light))
+                                    .foregroundStyle(.blue.gradient)
+                            }
+                            
+                            VStack(spacing: 12) {
+                                Text("No Network Ports Found")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.primary)
+                                
+                                Text("Click refresh to scan for available network hardware ports")
+                                    .font(.body)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                                
+                                Button(action: {
+                                    Task {
+                                        await networkManager.refreshNetworkPorts(using: helperToolManager)
+                                    }
+                                }) {
+                                    Label("Scan Network Ports", systemImage: "arrow.clockwise.circle.fill")
+                                        .font(.headline)
+                                        .padding(.horizontal, 24)
+                                        .padding(.vertical, 12)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.large)
+                                .padding(.top, 8)
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                } else {
+                    // Network Ports List
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(networkManager.networkPorts, id: \.id) { port in
+                                NetworkPortCard(port: port)
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - NetworkPortCard Component
+
+struct NetworkPortCard: View {
+    let port: NetworkPort
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header with port name and status
+            HStack(spacing: 12) {
+                // Port Name
+                Text(port.hardwarePort)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+                
+                Spacer()
+                
+                // Status Badge
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(port.isActive ? .green : .red)
+                        .frame(width: 8, height: 8)
+                    
+                    Text(port.statusText)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(port.isActive ? .green : .red)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(port.isActive ? .green.opacity(0.1) : .red.opacity(0.1))
+                )
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            
+            // Details Row
+            HStack(spacing: 16) {
+                DetailItem(title: "Device", value: port.device, icon: "desktopcomputer")
+                DetailItem(title: "Ethernet Address", value: port.ethernetAddress, icon: "personalhotspot")
+                DetailItem(title: "Connection", value: port.isActive ? "Connected" : "Disconnected", icon: port.isActive ? "wifi" : "wifi.slash")
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(isHovered ? 0.1 : 0.05), radius: isHovered ? 8 : 4, y: isHovered ? 4 : 2)
+        )
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isHovered)
+        .onHover { hover in
+            isHovered = hover
+        }
+        .contextMenu {
+            Button("Copy Device Name") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(port.device, forType: .string)
             }
             
-            Spacer()
+            Button("Copy Ethernet Address") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(port.ethernetAddress, forType: .string)
+            }
         }
-        .padding()
     }
 }
 
